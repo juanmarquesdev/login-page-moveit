@@ -1,10 +1,11 @@
-FROM node:latest as node
+FROM node:latest as build-stage
 
 WORKDIR /app
-
+COPY package*.json ./
+RUN npm install
+RUN npx ngcc --properties es2023 browser module main --first-only --create-ivy-entry-points
 COPY . .
-RUN npm i
-RUN npm run build --prod
+RUN npm run build
 
-FROM nginx:alpine
-COPY --from=node /app/dist/login-page /usr/share/nginx/html
+FROM nginx:stable
+COPY --from=build-stage /app/dist/login-page/browser /usr/share/nginx/html
